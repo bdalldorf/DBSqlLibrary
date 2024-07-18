@@ -193,7 +193,9 @@ namespace DBSqlLibrary
                 SqlCommand SqlCommand = Command(sql, SqlTransaction);
                 SqlCommand.ExecuteNonQuery();
 
-                RowID = SqlCommand.LastInsertedId;
+                // Get the ID from the last record inserted
+                SqlCommand = Command("SELECT SCOPE_IDENTITY()", SqlTransaction);
+                RowID = SQLDBCommon.GetValueLongFromSql(SqlCommand.ExecuteScalar());
             }
             catch (Exception exception)
             {
@@ -219,7 +221,7 @@ namespace DBSqlLibrary
 
         public static long ExecInsertNonQueryReturnID(string sql, string connectionString)
         {
-            long RowID = MySQLDBCommon.EmptyLong;
+            long RowID = SQLDBCommon.EmptyLong;
             SqlTransaction SqlTransaction = null;
             StringBuilder l_Results = new StringBuilder();
 
@@ -230,7 +232,9 @@ namespace DBSqlLibrary
                 SqlCommand SqlCommand = Command(sql, SqlTransaction);
                 SqlCommand.ExecuteNonQuery();
 
-                RowID = SqlCommand.LastInsertedId;
+                // Get the ID from the last record inserted
+                SqlCommand = Command("SELECT SCOPE_IDENTITY()", SqlTransaction);
+                RowID = SQLDBCommon.GetValueLongFromSql(SqlCommand.ExecuteScalar());
             }
             catch (Exception exception)
             {
@@ -304,16 +308,16 @@ namespace DBSqlLibrary
             }
         }
 
-        public MySqlDataReader ExecDataReader(string sql)
+        public SqlDataReader ExecDataReader(string sql)
         {
             SqlConnection SqlConnection = null;
-            MySqlDataReader MySqlDataReader = null;
+            SqlDataReader SqlDataReader = null;
 
             try
             {
                 SqlConnection = OpenConnection();
 
-                MySqlDataReader = Command(sql, SqlConnection).ExecuteReader();
+                SqlDataReader = Command(sql, SqlConnection).ExecuteReader();
             }
             catch (Exception exception)
             {
@@ -323,19 +327,19 @@ namespace DBSqlLibrary
                 if (SqlConnection != null)
                     SqlConnection.Close();
             }
-            return MySqlDataReader;
+            return SqlDataReader;
         }
 
-        public static MySqlDataReader ExecDataReader(string sql, string connectionString)
+        public static SqlDataReader ExecDataReader(string sql, string connectionString)
         {
             SqlConnection SqlConnection = null;
-            MySqlDataReader MySqlDataReader = null;
+            SqlDataReader SqlDataReader = null;
 
             try
             {
                 SqlConnection = OpenConnection(connectionString);
 
-                MySqlDataReader = Command(sql, SqlConnection).ExecuteReader();
+                SqlDataReader = Command(sql, SqlConnection).ExecuteReader();
             }
             catch (Exception exception)
             {
@@ -346,7 +350,7 @@ namespace DBSqlLibrary
                     SqlConnection.Close();
             }
 
-            return MySqlDataReader;
+            return SqlDataReader;
         }
 
         public DataTable ExecDataTable(string sql)
@@ -445,7 +449,7 @@ namespace DBSqlLibrary
                 | System.Reflection.BindingFlags.GetProperty | BindingFlags.Instance))
             {
                 object Value = properties.GetValue(model);
-                ModelFieldValues.Add(MySQLDBCommon.SetValueForSql(Value));
+                ModelFieldValues.Add(SQLDBCommon.SetValueForSql(Value));
             }
 
             return ModelFieldValues;
@@ -473,7 +477,7 @@ namespace DBSqlLibrary
                 object FieldValue = property.GetValue(model);
 
                 StringBuilderFields.Append(StringBuilderFields.Length == 0 ? $"({FieldName}" : $", {FieldName}");
-                StringBuilderValues.Append(StringBuilderValues.Length == 0 ? $"{MySQLDBCommon.SetValueForSql(FieldValue)}" : $", {MySQLDBCommon.SetValueForSql(FieldValue)}");
+                StringBuilderValues.Append(StringBuilderValues.Length == 0 ? $"{SQLDBCommon.SetValueForSql(FieldValue)}" : $", {SQLDBCommon.SetValueForSql(FieldValue)}");
             }
 
             return StringBuilderFields.Append($") VALUES ({StringBuilderValues.ToString()})").ToString();
@@ -498,7 +502,7 @@ namespace DBSqlLibrary
 
                 string FieldName = (string)l_TableFieldName.ConstructorArguments.First().Value;
                 object FieldValue = property.GetValue(model);
-                StringBuilder.Append(StringBuilder.Length == 0 ? $"{FieldName} = {MySQLDBCommon.SetValueForSql(FieldValue)}" : $", {FieldName} = {MySQLDBCommon.SetValueForSql(FieldValue)}");
+                StringBuilder.Append(StringBuilder.Length == 0 ? $"{FieldName} = {SQLDBCommon.SetValueForSql(FieldValue)}" : $", {FieldName} = {SQLDBCommon.SetValueForSql(FieldValue)}");
             }
             return StringBuilder.ToString();
         }
@@ -510,12 +514,12 @@ namespace DBSqlLibrary
 
         public static string GenerateStandardUpdateStatement(DatabaseModel model, string primaryKeyFieldName, object primaryKeyValue)
         {
-            return $"UPDATE {model.TableName()} SET {GenerateUpdateFields(model)} WHERE {GetDatabaseTableFieldName(model, primaryKeyFieldName)} = {MySQLDBCommon.SetValueForSql(primaryKeyValue)}";
+            return $"UPDATE {model.TableName()} SET {GenerateUpdateFields(model)} WHERE {GetDatabaseTableFieldName(model, primaryKeyFieldName)} = {SQLDBCommon.SetValueForSql(primaryKeyValue)}";
         }
 
         public static string GenerateStandardDeleteStatement(DatabaseModel model, string primaryKeyFieldName, object primaryKeyValue)
         {
-            return $"DELETE FROM {model.TableName()} WHERE {GetDatabaseTableFieldName(model, primaryKeyFieldName)} = {MySQLDBCommon.SetValueForSql(primaryKeyValue)}";
+            return $"DELETE FROM {model.TableName()} WHERE {GetDatabaseTableFieldName(model, primaryKeyFieldName)} = {SQLDBCommon.SetValueForSql(primaryKeyValue)}";
         }
     }
 }
